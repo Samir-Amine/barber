@@ -47,7 +47,7 @@ export const CustomerDashboardView: React.FC<CustomerDashboardViewProps> = ({ na
       }
     } catch (err) {
       console.error('Error fetching customer appointments:', err);
-    } fontally {
+    } finally { // <-- Changed from fontally to finally
       setLoading(false);
     }
   };
