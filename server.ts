@@ -1,8 +1,8 @@
 import express from 'express';
 import path from 'path';
 
-import { ALLOWED_ACTIONS, ALLOWED_ENTITIES } from './lib/make/config';
-import { triggerMakeWebhook } from './lib/make/webhook';
+import { ALLOWED_ACTIONS, ALLOWED_ENTITIES } from './lib/make/config.js';
+import { triggerMakeWebhook } from './lib/make/webhook.js';
 
 const app = express();
 

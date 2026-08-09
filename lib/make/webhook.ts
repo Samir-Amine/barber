@@ -5,8 +5,9 @@ import {
   MakeAction,
   MakeEntity,
   MakeEventPayload,
-} from './config';
-import { getSupabaseServerClient } from '../supabase/server';
+} from './config.js';
+
+import { getSupabaseServerClient } from '../supabase/server.js';
 
 export async function triggerMakeWebhook(payload: {
   entity: string;
