@@ -1,6 +1,5 @@
 import React, { useState } from 'react';
-import { useTranslation } from 'react-i18next';
-import {
+import { useTranslation } from '../../lib/i18n'; // ✅ Use local i18n
   Scissors,
   User,
   Calendar,
