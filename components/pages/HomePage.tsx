@@ -201,7 +201,7 @@ export const HomePage: React.FC<HomePageProps> = ({ navigate }) => {
                     />
                   ) : (
                     <div className="w-24 h-24 rounded-full bg-stone-800 text-amber-400 font-bold text-xl mx-auto flex items-center justify-center border-2 border-amber-500/20">
-                      {name.substring(0, 2).toUpperCase()}
+                      {(name || 'Barber').substring(0, 2).toUpperCase()}
                     </div>
                   )}
 
@@ -285,7 +285,7 @@ export const HomePage: React.FC<HomePageProps> = ({ navigate }) => {
                     <span className="text-rose-400 font-semibold">{t('home.closed')}</span>
                   ) : (
                     <span className="font-mono text-amber-300">
-                      {h.open_time.substring(0, 5)} - {h.close_time.substring(0, 5)}
+                      {(h.open_time || '09:00').substring(0, 5)} - {(h.close_time || '18:00').substring(0, 5)}
                     </span>
                   )}
                 </div>

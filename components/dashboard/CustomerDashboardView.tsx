@@ -47,7 +47,7 @@ export const CustomerDashboardView: React.FC<CustomerDashboardViewProps> = ({ na
       }
     } catch (err) {
       console.error('Error fetching customer appointments:', err);
-    } finally {
+    } fontally {
       setLoading(false);
     }
   };
@@ -131,7 +131,7 @@ export const CustomerDashboardView: React.FC<CustomerDashboardViewProps> = ({ na
                       {app.barber?.profile?.full_name || 'Barber'}
                     </td>
                     <td className="py-4 font-mono text-stone-300">
-                      {app.appointment_date} @ {app.start_time?.substring(0, 5)}
+                      {app.appointment_date} @ {(app.start_time || '').substring(0, 5)}
                     </td>
                     <td className="py-4 font-mono font-bold text-amber-300">
                       {app.total_price || app.service?.price || 0} {t('common.dh')}

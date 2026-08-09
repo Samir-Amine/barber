@@ -18,9 +18,7 @@ import {
   Calendar,
   Scissors,
   Users,
-  MessageSquare,
   Mail,
-  Bell,
   Clock,
   Settings,
   Activity,
@@ -30,11 +28,9 @@ import {
   Search,
   Check,
   Edit2,
-  Trash2,
-  Save,
   Shield,
-  Eye,
-  Send
+  Save,
+  X
 } from 'lucide-react';
 
 interface OwnerDashboardViewProps {
@@ -46,7 +42,7 @@ export const OwnerDashboardView: React.FC<OwnerDashboardViewProps> = ({ navigate
   const { user, profile } = useAuth();
 
   const [activeTab, setActiveTab] = useState<
-    'overview' | 'appointments' | 'calendar' | 'services' | 'barbers' | 'contact_messages' | 'settings' | 'automation'
+    'overview' | 'appointments' | 'services' | 'barbers' | 'contact_messages' | 'settings' | 'automation'
   >('overview');
 
   const [loading, setLoading] = useState(true);
@@ -58,7 +54,6 @@ export const OwnerDashboardView: React.FC<OwnerDashboardViewProps> = ({ navigate
   const [contactMsgs, setContactMsgs] = useState<ContactMessage[]>([]);
   const [automationLogs, setAutomationLogs] = useState<AutomationLog[]>([]);
   const [settings, setSettings] = useState<Setting[]>([]);
-  const [businessHours, setBusinessHours] = useState<BusinessHours[]>([]);
 
   // Cancel Modal State
   const [cancelModalId, setCancelModalId] = useState<string | null>(null);
@@ -160,7 +155,6 @@ export const OwnerDashboardView: React.FC<OwnerDashboardViewProps> = ({ navigate
         await supabase.from('appointments').update({ status: 'confirmed' }).eq('id', appId);
       }
 
-      // Automation Event
       fetch('/api/automation', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -314,8 +308,6 @@ export const OwnerDashboardView: React.FC<OwnerDashboardViewProps> = ({ navigate
   const todaysApps = appointments.filter((a) => a.appointment_date === todayStr);
   const pendingCount = appointments.filter((a) => a.status === 'pending').length;
   const confirmedCount = appointments.filter((a) => a.status === 'confirmed').length;
-  const completedTodayCount = todaysApps.filter((a) => a.status === 'completed').length;
-  const cancelledCount = appointments.filter((a) => a.status === 'cancelled').length;
 
   const filteredAppointments = appointments.filter((a) => {
     const matchesStatus = statusFilter === 'all' || a.status === statusFilter;
@@ -463,7 +455,7 @@ export const OwnerDashboardView: React.FC<OwnerDashboardViewProps> = ({ navigate
                       <span className="text-stone-400 text-[11px] block">{a.service?.name}</span>
                     </div>
                     <div className="text-right">
-                      <span className="font-mono text-amber-300">{a.start_time?.substring(0, 5)}</span>
+                      <span className="font-mono text-amber-300">{(a.start_time || '').substring(0, 5)}</span>
                       <span className="block text-[10px] text-stone-500 uppercase font-bold">{a.status}</span>
                     </div>
                   </div>
@@ -539,7 +531,7 @@ export const OwnerDashboardView: React.FC<OwnerDashboardViewProps> = ({ navigate
                         {app.service?.name}
                       </td>
                       <td className="py-4 font-mono text-stone-300">
-                        {app.appointment_date} @ {app.start_time?.substring(0, 5)}
+                        {app.appointment_date} @ {(app.start_time || '').substring(0, 5)}
                       </td>
                       <td className="py-4">
                         <span className={`px-2 py-0.5 rounded font-bold uppercase text-[10px] ${
@@ -760,15 +752,13 @@ export const OwnerDashboardView: React.FC<OwnerDashboardViewProps> = ({ navigate
                       <td className="py-2.5 text-amber-300 font-bold">{log.entity}</td>
                       <td className="py-2.5 text-stone-200">{log.action}</td>
                       <td className="py-2.5">
-                        <span className={`px-1.5 py-0.5 rounded text-[10px] ${
-                          log.response_status === 200 || !log.error_message
-                            ? 'bg-emerald-500/20 text-emerald-300'
-                            : 'bg-rose-500/20 text-rose-300'
+                        <span className={`px-1.5 py-0.5 rounded text-[10px] font-bold uppercase ${
+                          log.status === 'success' ? 'bg-emerald-500/20 text-emerald-300' : 'bg-rose-500/20 text-rose-300'
                         }`}>
-                          {log.response_status || 'Handled'}
+                          {log.status}
                         </span>
                       </td>
-                      <td className="py-2.5 text-stone-500 text-[10px]">{log.error_message || '—'}</td>
+                      <td className="py-2.5 text-rose-400 text-[10px] max-w-xs truncate">{log.error || '-'}</td>
                     </tr>
                   ))}
                 </tbody>
@@ -780,190 +770,174 @@ export const OwnerDashboardView: React.FC<OwnerDashboardViewProps> = ({ navigate
 
       {/* TAB 7: SETTINGS */}
       {activeTab === 'settings' && (
-        <form onSubmit={handleSaveSettings} className="bg-stone-950 border border-stone-800 rounded-2xl p-6 space-y-6 max-w-2xl animate-in fade-in">
+        <div className="bg-stone-950 border border-stone-800 rounded-2xl p-6 space-y-6 animate-in fade-in">
           <h2 className="font-serif text-xl font-bold text-stone-100 flex items-center gap-2">
             <Settings className="w-5 h-5 text-amber-400" />
-            Business Contact Settings
+            Shop Information & Settings
           </h2>
 
-          <div className="space-y-4 text-xs">
-            <div className="space-y-1">
-              <label className="font-semibold text-stone-300">Shop Phone Number</label>
+          <form onSubmit={handleSaveSettings} className="space-y-4 max-w-lg">
+            <div>
+              <label className="block text-xs font-semibold text-stone-300 mb-1">Shop Phone</label>
               <input
                 type="text"
                 value={settingPhone}
                 onChange={(e) => setSettingPhone(e.target.value)}
-                className="w-full bg-stone-900 border border-stone-800 rounded-xl p-3 text-stone-100 focus:border-amber-500 focus:outline-none"
+                className="w-full bg-stone-900 border border-stone-800 rounded-xl px-4 py-2 text-xs text-stone-100 focus:border-amber-500 focus:outline-none"
               />
             </div>
-
-            <div className="space-y-1">
-              <label className="font-semibold text-stone-300">Shop Email</label>
+            <div>
+              <label className="block text-xs font-semibold text-stone-300 mb-1">Shop Email</label>
               <input
                 type="email"
                 value={settingEmail}
                 onChange={(e) => setSettingEmail(e.target.value)}
-                className="w-full bg-stone-900 border border-stone-800 rounded-xl p-3 text-stone-100 focus:border-amber-500 focus:outline-none"
+                className="w-full bg-stone-900 border border-stone-800 rounded-xl px-4 py-2 text-xs text-stone-100 focus:border-amber-500 focus:outline-none"
               />
             </div>
-
-            <div className="space-y-1">
-              <label className="font-semibold text-stone-300">Shop Address</label>
+            <div>
+              <label className="block text-xs font-semibold text-stone-300 mb-1">Shop Address</label>
               <input
                 type="text"
                 value={settingAddress}
                 onChange={(e) => setSettingAddress(e.target.value)}
-                className="w-full bg-stone-900 border border-stone-800 rounded-xl p-3 text-stone-100 focus:border-amber-500 focus:outline-none"
+                className="w-full bg-stone-900 border border-stone-800 rounded-xl px-4 py-2 text-xs text-stone-100 focus:border-amber-500 focus:outline-none"
               />
             </div>
-          </div>
 
-          <button
-            type="submit"
-            disabled={savingSettings}
-            className="px-6 py-2.5 bg-amber-500 text-stone-950 font-bold text-xs uppercase rounded-xl hover:bg-amber-400 transition-all flex items-center gap-2"
-          >
-            <Save className="w-4 h-4" />
-            {savingSettings ? t('common.loading') : t('dashboard.saveSettings')}
-          </button>
-        </form>
+            <button
+              type="submit"
+              disabled={savingSettings}
+              className="px-5 py-2.5 rounded-xl bg-amber-500 text-stone-950 font-bold text-xs uppercase hover:bg-amber-400 transition-all flex items-center gap-2"
+            >
+              <Save className="w-4 h-4" />
+              {savingSettings ? 'Saving...' : 'Save Settings'}
+            </button>
+          </form>
+        </div>
       )}
 
-      {/* SERVICE EDIT MODAL */}
+      {/* SERVICE EDIT/ADD MODAL */}
       {showServiceModal && (
-        <div className="fixed inset-0 z-50 bg-black/80 flex items-center justify-center p-4">
-          <form onSubmit={handleSaveService} className="w-full max-w-md bg-stone-950 border border-amber-500/30 rounded-2xl p-6 space-y-4">
-            <h3 className="font-serif text-lg font-bold text-amber-100">
-              {editingService?.id ? t('dashboard.editService') : t('dashboard.addService')}
-            </h3>
+        <div className="fixed inset-0 bg-stone-950/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+          <div className="bg-stone-900 border border-stone-800 rounded-2xl p-6 w-full max-w-md space-y-4">
+            <div className="flex items-center justify-between">
+              <h3 className="font-serif text-lg font-bold text-amber-100">
+                {editingService?.id ? 'Edit Service' : 'Add New Service'}
+              </h3>
+              <button onClick={() => setShowServiceModal(false)} className="text-stone-400 hover:text-stone-200">
+                <X className="w-5 h-5" />
+              </button>
+            </div>
 
-            <div className="space-y-3 text-xs">
+            <form onSubmit={handleSaveService} className="space-y-4">
               <div>
-                <label className="block text-stone-300 mb-1">Service Name</label>
+                <label className="block text-xs text-stone-300 mb-1">Service Name</label>
                 <input
                   type="text"
                   required
                   value={editingService?.name || ''}
                   onChange={(e) => setEditingService({ ...editingService, name: e.target.value })}
-                  className="w-full bg-stone-900 border border-stone-800 rounded-xl p-2.5 text-stone-100"
+                  className="w-full bg-stone-950 border border-stone-800 rounded-xl px-3 py-2 text-xs text-stone-100 focus:border-amber-500 focus:outline-none"
                 />
               </div>
-
               <div>
-                <label className="block text-stone-300 mb-1">Description</label>
+                <label className="block text-xs text-stone-300 mb-1">Description</label>
                 <textarea
                   rows={2}
                   value={editingService?.description || ''}
                   onChange={(e) => setEditingService({ ...editingService, description: e.target.value })}
-                  className="w-full bg-stone-900 border border-stone-800 rounded-xl p-2.5 text-stone-100 resize-none"
+                  className="w-full bg-stone-950 border border-stone-800 rounded-xl px-3 py-2 text-xs text-stone-100 focus:border-amber-500 focus:outline-none"
                 />
               </div>
-
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="block text-stone-300 mb-1">Price (MAD)</label>
+                  <label className="block text-xs text-stone-300 mb-1">Price (DH)</label>
                   <input
                     type="number"
                     required
-                    value={editingService?.price || 100}
+                    value={editingService?.price || 0}
                     onChange={(e) => setEditingService({ ...editingService, price: Number(e.target.value) })}
-                    className="w-full bg-stone-900 border border-stone-800 rounded-xl p-2.5 text-stone-100"
+                    className="w-full bg-stone-950 border border-stone-800 rounded-xl px-3 py-2 text-xs text-stone-100 focus:border-amber-500 focus:outline-none"
                   />
                 </div>
                 <div>
-                  <label className="block text-stone-300 mb-1">Duration (Min)</label>
+                  <label className="block text-xs text-stone-300 mb-1">Duration (Min)</label>
                   <input
                     type="number"
                     required
                     value={editingService?.duration_minutes || 30}
                     onChange={(e) => setEditingService({ ...editingService, duration_minutes: Number(e.target.value) })}
-                    className="w-full bg-stone-900 border border-stone-800 rounded-xl p-2.5 text-stone-100"
+                    className="w-full bg-stone-950 border border-stone-800 rounded-xl px-3 py-2 text-xs text-stone-100 focus:border-amber-500 focus:outline-none"
                   />
                 </div>
               </div>
-            </div>
 
-            <div className="flex justify-end gap-2 pt-2">
-              <button
-                type="button"
-                onClick={() => setShowServiceModal(false)}
-                className="px-4 py-2 bg-stone-800 text-stone-300 text-xs rounded-xl font-semibold"
-              >
-                {t('common.cancel')}
-              </button>
               <button
                 type="submit"
-                className="px-5 py-2 bg-amber-500 text-stone-950 text-xs font-bold uppercase rounded-xl"
+                className="w-full py-2.5 rounded-xl bg-amber-500 text-stone-950 font-bold text-xs uppercase hover:bg-amber-400 transition-all mt-2"
               >
-                {t('common.save')}
+                Save Service
               </button>
-            </div>
-          </form>
+            </form>
+          </div>
         </div>
       )}
 
       {/* BARBER ADD MODAL */}
       {showBarberModal && (
-        <div className="fixed inset-0 z-50 bg-black/80 flex items-center justify-center p-4">
-          <form onSubmit={handleAddBarber} className="w-full max-w-md bg-stone-950 border border-amber-500/30 rounded-2xl p-6 space-y-4">
-            <h3 className="font-serif text-lg font-bold text-amber-100">{t('dashboard.addBarber')}</h3>
+        <div className="fixed inset-0 bg-stone-950/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+          <div className="bg-stone-900 border border-stone-800 rounded-2xl p-6 w-full max-w-md space-y-4">
+            <div className="flex items-center justify-between">
+              <h3 className="font-serif text-lg font-bold text-amber-100">Add Barber</h3>
+              <button onClick={() => setShowBarberModal(false)} className="text-stone-400 hover:text-stone-200">
+                <X className="w-5 h-5" />
+              </button>
+            </div>
 
-            <div className="space-y-3 text-xs">
+            <form onSubmit={handleAddBarber} className="space-y-4">
               <div>
-                <label className="block text-stone-300 mb-1">Barber Name</label>
+                <label className="block text-xs text-stone-300 mb-1">Full Name</label>
                 <input
                   type="text"
                   required
                   value={newBarberName}
                   onChange={(e) => setNewBarberName(e.target.value)}
-                  className="w-full bg-stone-900 border border-stone-800 rounded-xl p-2.5 text-stone-100"
-                  placeholder="Youssef El Amrani"
+                  className="w-full bg-stone-950 border border-stone-800 rounded-xl px-3 py-2 text-xs text-stone-100 focus:border-amber-500 focus:outline-none"
                 />
               </div>
-
               <div>
-                <label className="block text-stone-300 mb-1">Email Address</label>
+                <label className="block text-xs text-stone-300 mb-1">Email</label>
                 <input
                   type="email"
                   required
                   value={newBarberEmail}
                   onChange={(e) => setNewBarberEmail(e.target.value)}
-                  className="w-full bg-stone-900 border border-stone-800 rounded-xl p-2.5 text-stone-100"
-                  placeholder="youssef@atlasblade.ma"
+                  className="w-full bg-stone-950 border border-stone-800 rounded-xl px-3 py-2 text-xs text-stone-100 focus:border-amber-500 focus:outline-none"
                 />
               </div>
-
               <div>
-                <label className="block text-stone-300 mb-1">Phone Number</label>
+                <label className="block text-xs text-stone-300 mb-1">Phone</label>
                 <input
-                  type="tel"
+                  type="text"
                   value={newBarberPhone}
                   onChange={(e) => setNewBarberPhone(e.target.value)}
-                  className="w-full bg-stone-900 border border-stone-800 rounded-xl p-2.5 text-stone-100"
-                  placeholder="+212 6 00 11 22 33"
+                  className="w-full bg-stone-950 border border-stone-800 rounded-xl px-3 py-2 text-xs text-stone-100 focus:border-amber-500 focus:outline-none"
                 />
               </div>
-            </div>
 
-            <div className="flex justify-end gap-2 pt-2">
-              <button
-                type="button"
-                onClick={() => setShowBarberModal(false)}
-                className="px-4 py-2 bg-stone-800 text-stone-300 text-xs rounded-xl font-semibold"
-              >
-                {t('common.cancel')}
-              </button>
               <button
                 type="submit"
-                className="px-5 py-2 bg-amber-500 text-stone-950 text-xs font-bold uppercase rounded-xl"
+                className="w-full py-2.5 rounded-xl bg-amber-500 text-stone-950 font-bold text-xs uppercase hover:bg-amber-400 transition-all mt-2"
               >
-                {t('common.save')}
+                Add Barber
               </button>
-            </div>
-          </form>
+            </form>
+          </div>
         </div>
       )}
 
+      {/* CANCEL MODAL */}
       {cancelModalId && (
         <CancelAppointmentModal
           appointmentId={cancelModalId}

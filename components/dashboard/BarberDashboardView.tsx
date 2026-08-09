@@ -216,14 +216,14 @@ export const BarberDashboardView: React.FC<BarberDashboardViewProps> = ({ naviga
                       <td className="py-4 font-medium text-stone-200">
                         {app.customer?.profile?.full_name || 'Customer'}
                         <span className="block text-[10px] text-stone-500 font-mono">
-                          {app.customer?.profile?.phone}
+                          {app.customer?.profile?.phone || ''}
                         </span>
                       </td>
                       <td className="py-4 text-stone-300">
                         {app.service?.name}
                       </td>
                       <td className="py-4 font-mono text-stone-300">
-                        {app.appointment_date} @ {app.start_time?.substring(0, 5)}
+                        {app.appointment_date} @ {(app.start_time || '').substring(0, 5)}
                       </td>
                       <td className="py-4">
                         <span className={`px-2 py-0.5 rounded font-bold uppercase text-[10px] ${
