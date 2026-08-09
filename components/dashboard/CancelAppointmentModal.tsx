@@ -1,9 +1,8 @@
 import React, { useState } from 'react';
-import { supabase } from '../../lib/supabase/client';
 import { useTranslation } from '../../lib/i18n';
 import { useAuth } from '../../lib/auth/AuthContext';
 import { cancellationSchema } from '../../lib/validations';
-import { X, AlertTriangle, ShieldAlert } from 'lucide-react';
+import { AlertTriangle, ShieldAlert } from 'lucide-react';
 
 interface CancelAppointmentModalProps {
   appointmentId: string;
@@ -11,13 +10,12 @@ interface CancelAppointmentModalProps {
   onSuccess: () => void;
 }
 
-export const CancelAppointmentModal: React.FC<CancelAppointmentModalProps> = ({
-  appointmentId,
-  onClose,
-  onSuccess,
-}) => {
+export const CancelAppointmentModal: React.FC<
+  CancelAppointmentModalProps
+> = ({ appointmentId, onClose, onSuccess }) => {
   const { t } = useTranslation();
   const { user, role } = useAuth();
+
   const [reason, setReason] = useState('');
   const [loading, setLoading] = useState(false);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
@@ -39,81 +37,90 @@ export const CancelAppointmentModal: React.FC<CancelAppointmentModalProps> = ({
     setLoading(true);
 
     try {
-      if (!supabase) throw new Error('Supabase client unavailable.');
-
-      // 1. Call `cancel_appointment` RPC
-      const { error: rpcErr } = await supabase.rpc('cancel_appointment', {
-        p_appointment_id: appointmentId,
-        p_reason: reason,
-      });
-
-      if (rpcErr) {
-        console.warn('RPC cancel_appointment returned error, attempting direct table update:', rpcErr);
-        const { error: updateErr } = await supabase
-          .from('appointments')
-          .update({
-            status: 'cancelled',
-            cancellation_reason: reason,
-          })
-          .eq('id', appointmentId);
-
-        if (updateErr) {
-          throw new Error(updateErr.message || 'Failed to cancel appointment.');
-        }
-      }
-
-      // 2. Dispatch Make.com server-side automation event securely
-      fetch('/api/automation', {
+      const response = await fetch('/api/automation', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json',
+        },
         body: JSON.stringify({
           entity: 'appointment',
           action: 'cancel',
           record_id: appointmentId,
-          actor: { id: user?.id || 'system', role },
-          data: { cancellation_reason: reason },
+
+          actor: {
+            id: user?.id || 'system',
+            role,
+          },
+
+          data: {
+            cancellation_reason: reason,
+          },
         }),
-      }).catch((e) => console.warn('Automation notice:', e));
+      });
+
+      let result: any = null;
+
+      try {
+        result = await response.json();
+      } catch {
+        // Ignore empty/non-JSON response
+      }
+
+      if (!response.ok) {
+        throw new Error(
+          result?.error ||
+            result?.error_message ||
+            `Cancellation request failed (${response.status})`
+        );
+      }
+
+      if (result && result.success === false) {
+        throw new Error(
+          result.error ||
+            result.error_message ||
+            'Failed to cancel appointment.'
+        );
+      }
 
       onSuccess();
     } catch (err: any) {
-      console.error('Error cancelling appointment:', err);
-      setErrorMsg(err.message || t('common.error'));
+      console.error('Error sending cancellation request:', err);
+
+      setErrorMsg(
+        err?.message ||
+          t('common.error') ||
+          'Failed to cancel appointment.'
+      );
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4">
-      <div className="w-full max-w-md bg-stone-950 border border-amber-500/30 rounded-2xl p-6 space-y-4 shadow-2xl relative animate-in zoom-in-95">
-        <button
-          onClick={onClose}
-          className="absolute top-4 right-4 ltr:right-4 rtl:left-4 p-1 text-stone-400 hover:text-stone-100"
-        >
-          <X className="w-5 h-5" />
-        </button>
-
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-4">
+      <div className="w-full max-w-md rounded-2xl bg-stone-950 border border-stone-800 p-6 shadow-2xl">
         <div className="flex items-center gap-3 text-amber-400">
           <div className="w-10 h-10 rounded-full bg-amber-500/20 flex items-center justify-center shrink-0">
             <AlertTriangle className="w-5 h-5" />
           </div>
+
           <h3 className="font-serif text-lg font-bold text-amber-100">
             {t('dashboard.cancelReasonTitle')}
           </h3>
         </div>
 
-        <p className="text-xs text-stone-400 leading-relaxed">
-          {t('common.reasonRequired')}. This reason will be recorded and sent to the customer.
+        <p className="mt-4 text-xs text-stone-400 leading-relaxed">
+          {t('common.reasonRequired')}. This reason will be recorded and sent
+          to the customer.
         </p>
 
         {errorMsg && (
-          <div className="p-3 rounded-lg bg-rose-500/10 border border-rose-500/30 text-rose-300 text-xs">
+          <div className="mt-4 p-3 rounded-lg bg-rose-500/10 border border-rose-500/30 text-rose-300 text-xs">
             {errorMsg}
           </div>
         )}
 
-        <form onSubmit={handleCancel} className="space-y-4">
+        <form onSubmit={handleCancel} className="space-y-4 mt-5">
           <div>
             <textarea
               required
@@ -129,16 +136,21 @@ export const CancelAppointmentModal: React.FC<CancelAppointmentModalProps> = ({
             <button
               type="button"
               onClick={onClose}
-              className="px-4 py-2 rounded-xl bg-stone-800 text-stone-300 text-xs font-semibold hover:bg-stone-700"
+              disabled={loading}
+              className="px-4 py-2 rounded-xl bg-stone-800 text-stone-300 text-xs font-semibold hover:bg-stone-700 disabled:opacity-40"
             >
               {t('common.cancel')}
             </button>
+
             <button
               type="submit"
               disabled={loading || !reason.trim()}
               className="px-5 py-2 rounded-xl bg-rose-600 disabled:opacity-40 text-stone-100 font-bold text-xs uppercase hover:bg-rose-500 transition-all flex items-center gap-1.5"
             >
-              {loading ? t('common.loading') : t('common.confirm')}
+              {loading
+                ? t('common.loading')
+                : t('common.confirm')}
+
               <ShieldAlert className="w-4 h-4" />
             </button>
           </div>
