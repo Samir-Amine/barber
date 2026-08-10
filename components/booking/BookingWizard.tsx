@@ -1,14 +1,14 @@
-import React, { useState } from 'react';
-import { useTranslation } from '../../lib/i18n'; // ✅ Use local i18n
-  Scissors,
-  User,
+import React, { useState, useEffect } from 'react';
+import { useTranslation } from '../../lib/i18n';
+import {
   Calendar,
   Clock,
+  Scissors,
+  User,
   CheckCircle2,
   AlertCircle,
-  ArrowLeft,
   ChevronRight,
-  ShieldCheck,
+  ChevronLeft,
   Check,
   X
 } from 'lucide-react';
