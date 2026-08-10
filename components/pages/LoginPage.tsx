@@ -215,36 +215,7 @@ export const LoginPage: React.FC<LoginPageProps> = ({ navigate }) => {
           </div>
 
           {/* Development / testing shortcuts */}
-          <div className="border-t border-stone-900 pt-4 space-y-2">
-            <p className="text-[11px] text-stone-400 text-center font-mono">
-              Quick Access Portals:
-            </p>
-
-            <div className="grid grid-cols-3 gap-2">
-              <button
-                type="button"
-                onClick={() => handleTestPortalSwitch('owner')}
-                className="py-1.5 px-2 bg-stone-900 border border-stone-800 hover:border-amber-500/50 rounded-lg text-[10px] text-amber-300 font-semibold text-center"
-              >
-                Owner Portal
-              </button>
-
-              <button
-                type="button"
-                onClick={() => handleTestPortalSwitch('barber')}
-                className="py-1.5 px-2 bg-stone-900 border border-stone-800 hover:border-amber-500/50 rounded-lg text-[10px] text-amber-300 font-semibold text-center"
-              >
-                Barber Portal
-              </button>
-
-              <button
-                type="button"
-                onClick={() => handleTestPortalSwitch('customer')}
-                className="py-1.5 px-2 bg-stone-900 border border-stone-800 hover:border-amber-500/50 rounded-lg text-[10px] text-amber-300 font-semibold text-center"
-              >
-                Customer Portal
-              </button>
-            </div>
+          
           </div>
         </div>
       </div>
