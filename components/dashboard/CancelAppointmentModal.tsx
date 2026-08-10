@@ -42,24 +42,17 @@ export const CancelAppointmentModal: React.FC<CancelAppointmentModalProps> = ({
       if (!supabase) throw new Error('Supabase client unavailable.');
 
       // 1. Call `cancel_appointment` RPC
+      // 1. Call `cancel_appointment` RPC
       const { error: rpcErr } = await supabase.rpc('cancel_appointment', {
-        p_appointment_id: appointmentId,
-        p_reason: reason,
+          p_appointment_id: appointmentId,
+          p_cancellation_reason: reason,
       });
 
       if (rpcErr) {
-        console.warn('RPC cancel_appointment returned error, attempting direct table update:', rpcErr);
-        const { error: updateErr } = await supabase
-          .from('appointments')
-          .update({
-            status: 'cancelled',
-            cancellation_reason: reason,
-          })
-          .eq('id', appointmentId);
-
-        if (updateErr) {
-          throw new Error(updateErr.message || 'Failed to cancel appointment.');
-        }
+        throw new Error(
+        rpcErr.message || 'Failed to cancel appointment.'
+      );
+      }
       }
 
       // 2. Dispatch Make.com server-side automation event securely
