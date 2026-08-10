@@ -28,7 +28,7 @@ interface Barber {
   role?: string;
 }
 
-interface BookingModalProps {
+interface BookingWizardProps {
   isOpen: boolean;
   onClose: () => void;
   services: Service[];
@@ -36,7 +36,7 @@ interface BookingModalProps {
   onSuccess?: (bookingData: any) => void;
 }
 
-export const BookingModal: React.FC<BookingModalProps> = ({
+export const BookingWizard: React.FC<BookingWizardProps> = ({
   isOpen,
   onClose,
   services = [],
