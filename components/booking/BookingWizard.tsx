@@ -101,7 +101,7 @@ export const BookingWizard: React.FC<BookingWizardProps> = ({
                 )
               `
             )
-            .eq('is_active', true),
+            .eq('is_available', true),
         ]);
 
         if (servicesResult.error) {
