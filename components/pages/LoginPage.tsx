@@ -216,7 +216,6 @@ export const LoginPage: React.FC<LoginPageProps> = ({ navigate }) => {
 
           {/* Development / testing shortcuts */}
           
-          </div>
         </div>
       </div>
     </div>
