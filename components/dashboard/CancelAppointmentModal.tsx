@@ -39,44 +39,40 @@ export const CancelAppointmentModal: React.FC<CancelAppointmentModalProps> = ({
     setLoading(true);
 
     try {
-      if (!supabase) throw new Error('Supabase client unavailable.');
+  if (!supabase) throw new Error('Supabase client unavailable.');
 
-      // 1. Call `cancel_appointment` RPC
-      // 1. Call `cancel_appointment` RPC
-      const { error: rpcErr } = await supabase.rpc('cancel_appointment', {
-          p_appointment_id: appointmentId,
-          p_cancellation_reason: reason,
-      });
+  // 1. Call `cancel_appointment` RPC
+  const { error: rpcErr } = await supabase.rpc('cancel_appointment', {
+    p_appointment_id: appointmentId,
+    p_cancellation_reason: reason,
+  });
 
-      if (rpcErr) {
-        throw new Error(
-        rpcErr.message || 'Failed to cancel appointment.'
-      );
-      }
-      }
+  if (rpcErr) {
+    throw new Error(
+      rpcErr.message || 'Failed to cancel appointment.'
+    );
+  }
 
-      // 2. Dispatch Make.com server-side automation event securely
-      fetch('/api/automation', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          entity: 'appointment',
-          action: 'cancel',
-          record_id: appointmentId,
-          actor: { id: user?.id || 'system', role },
-          data: { cancellation_reason: reason },
-        }),
-      }).catch((e) => console.warn('Automation notice:', e));
+  // 2. Dispatch Make.com server-side automation event securely
+  fetch('/api/automation', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      entity: 'appointment',
+      action: 'cancel',
+      record_id: appointmentId,
+      actor: { id: user?.id || 'system', role },
+      data: { cancellation_reason: reason },
+    }),
+  }).catch((e) => console.warn('Automation notice:', e));
 
-      onSuccess();
-    } catch (err: any) {
-      console.error('Error cancelling appointment:', err);
-      setErrorMsg(err.message || t('common.error'));
-    } finally {
-      setLoading(false);
-    }
-  };
-
+  onSuccess();
+} catch (err: any) {
+  console.error('Error cancelling appointment:', err);
+  setErrorMsg(err.message || t('common.error'));
+} finally {
+  setLoading(false);
+}
   return (
     <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4">
       <div className="w-full max-w-md bg-stone-950 border border-amber-500/30 rounded-2xl p-6 space-y-4 shadow-2xl relative animate-in zoom-in-95">
