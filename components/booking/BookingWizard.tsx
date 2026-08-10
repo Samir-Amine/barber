@@ -86,7 +86,7 @@ export const BookingWizard: React.FC<BookingWizardProps> = ({
             .select(
               'id, name, description, price, duration_minutes, image_url'
             )
-            .eq('is_available', true)
+            .eq('is_active', true)
             .order('display_order', { ascending: true }),
 
           supabase
