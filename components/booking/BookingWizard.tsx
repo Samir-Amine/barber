@@ -407,3 +407,4 @@ export const BookingWizard: React.FC<BookingWizardProps> = ({
 };
 
 export default BookingModal;
+export const BookingModal = BookingWizard;
