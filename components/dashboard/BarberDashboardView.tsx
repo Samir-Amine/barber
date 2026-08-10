@@ -230,62 +230,51 @@ export const BarberDashboardView: React.FC<BarberDashboardViewProps> = ({
   // --------------------------------------------------
   // Complete appointment
   // --------------------------------------------------
-  const handleCompleteAppointment = async (appId: string) => {
-    if (!supabase) return;
+  const handleConfirmAppointment = async (appId: string) => {
+  if (!supabase) return;
 
-    try {
-      const { error: rpcError } = await supabase.rpc(
-        'complete_appointment',
-        {
-          p_appointment_id: appId,
-        }
-      );
+  try {
+    // 1. Confirm the appointment in Supabase
+    const { error } = await supabase.rpc('confirm_appointment', {
+      p_appointment_id: appId,
+    });
 
-      if (rpcError) {
-        console.warn(
-          'complete_appointment RPC failed, using direct update:',
-          rpcError
-        );
-
-        const { error: updateError } = await supabase
-          .from('appointments')
-          .update({
-            status: 'completed',
-            completed_at: new Date().toISOString(),
-          })
-          .eq('id', appId);
-
-        if (updateError) {
-          throw updateError;
-        }
-      }
-
-      fetch('/api/automation', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          entity: 'appointment',
-          action: 'complete',
-          record_id: appId,
-          actor: {
-            id: user?.id || 'system',
-            role: 'barber',
-          },
-          data: {
-            status: 'completed',
-          },
-        }),
-      }).catch((error) => {
-        console.warn('Automation notification failed:', error);
-      });
-
-      await fetchBarberData();
-    } catch (err) {
-      console.error('Error completing appointment:', err);
+    if (error) {
+      console.error('Error confirming appointment:', error);
+      throw error;
     }
-  };
+
+    // 2. Notify Make.com
+    const automationResponse = await fetch('/api/automation', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        entity: 'appointment',
+        action: 'confirm',
+        record_id: appId,
+        actor: {
+          id: user?.id || 'system',
+          role: 'barber',
+        },
+        data: {},
+      }),
+    });
+
+    if (!automationResponse.ok) {
+      console.warn(
+        'Appointment confirmed, but Make automation failed:',
+        await automationResponse.text()
+      );
+    }
+
+    // 3. Refresh dashboard
+    await fetchBarberData();
+  } catch (err: any) {
+    console.error('Error confirming appointment:', err);
+  }
+};
 
   // --------------------------------------------------
   // Save barber profile
