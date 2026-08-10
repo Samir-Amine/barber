@@ -20,7 +20,7 @@ export interface Barber {
   profile_id: string;
   bio: string | null;
   specialties: string[] | null;
-  is_active: boolean;
+  is_available: boolean;
   photo_url: string | null;
   created_at: string;
   // Joined profile fields
