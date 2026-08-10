@@ -57,7 +57,7 @@ export const LoginPage: React.FC<LoginPageProps> = ({ navigate }) => {
 
         /*
          * IMPORTANT:
-         * On login we use the authenticated user's real role.
+         * On logi we use the authenticated user's real role.
          * We do NOT let the registration form determine the role.
          */
         redirectByRole(role);
